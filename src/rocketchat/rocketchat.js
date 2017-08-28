@@ -135,14 +135,17 @@ export default class RocketChat {
   }
 
   async joinRoom(room) {
-    let ircName = this.getIRCRoomName(room);
+    let ircChannel = this.getIRCChannelName(room);
 
-    this.connection.joinRoom(ircName, room.topic);
+    this.connection.joinRoom(ircChannel, room.topic);
     await this.getUsersInRoom(room);
 
     let nameList = _.map(room.users, "username");
-    this.connection.sendPacket("namesReply", ircName, nameList.join(" "));
-    this.connection.sendPacket("namesEnd", ircName);
+    this.connection.sendPacket("namesReply", ircChannel, nameList.join(" "));
+    this.connection.sendPacket("namesEnd", ircChannel);
+
+    _.forOwn(room.users, user => this.connection.sendPacket("whoReply", user.name, ircChannel, user.name, this.userStatuses[user._id]));
+    this.connection.sendPacket("whoEnd", ircChannel);
   }
 
   async getUsersInRoom(room) {
@@ -168,7 +171,7 @@ export default class RocketChat {
     return room;
   }
 
-  getIRCRoomName(room) {
+  getIRCChannelName(room) {
     return `${this.getRoomPrefix(room)}${room.name}`;
   }
 
