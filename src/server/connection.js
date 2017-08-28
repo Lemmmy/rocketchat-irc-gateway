@@ -38,7 +38,7 @@ export default class Connection {
   }
 
   onData(data) {
-    this.parser.write(data.toString());
+    this.parser.write(data.toString().replace(/\r?\n/g, "\r\n"));
   }
 
   onParsedData(data) {
