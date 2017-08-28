@@ -272,6 +272,14 @@ export default class RocketChat {
 
   onMessage(msg) {
     let room = this.rooms[msg.rid];
+    let channel = this.getIRCChannelName(room) || this.connection.loginNick;
+
+    if (channel === "undefined") {
+      channel = this.connection.loginNick;
+    }
+
+    let nick = msg.u.username;
+
     if (room.t === "d" && msg.u._id === this.me._id) {
       let otherUserID = room.otherUserID;
       let otherUser = this.users[otherUserID];
@@ -281,9 +289,6 @@ export default class RocketChat {
 
       return;
     }
-
-    let channel = this.getIRCChannelName(room);
-    let nick = msg.u.username;
 
     let edit = false;
 
