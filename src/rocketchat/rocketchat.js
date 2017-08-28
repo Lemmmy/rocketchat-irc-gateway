@@ -332,7 +332,7 @@ export default class RocketChat {
   sendRoomWho(room) {
     let ircChannel = this.getIRCChannelName(room);
 
-    _.forOwn(room.users, user => this.connection.sendPacket("whoReply", user.name, ircChannel, user.name, this.userStatuses[user._id]));
+    _.forOwn(room.users, user => this.connection.sendPacket("whoReply", user.username, ircChannel, user.username, this.userStatuses[user._id]));
     this.connection.sendPacket("whoEnd", ircChannel);
   }
 }
