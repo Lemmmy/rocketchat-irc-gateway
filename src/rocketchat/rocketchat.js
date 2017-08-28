@@ -227,7 +227,6 @@ export default class RocketChat {
     let nick = msg.u.username;
 
     let edit = false;
-    let highlight = false;
 
     let oldMsg;
     if (oldMsg = _.find(this.messageCache, { _id: msg._id })) {
@@ -238,14 +237,18 @@ export default class RocketChat {
     this.messageCache.push(msg);
     if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
 
-    HIGHLIGHT_TERMS.forEach(term => {
-      if (msg.msg.includes(term)) highlight = true;
+    msg.msg.split("\n").forEach(line => {
+      let highlight = false;
+
+      HIGHLIGHT_TERMS.forEach(term => {
+        if (line.includes(term)) highlight = true;
+      });
+
+      let prefix = edit ? "[EDIT] ".irc.lightgrey() : "";
+      let suffix = highlight ? ` (cc: ${this.connection.loginNick})`.irc.red() : "";
+
+      this.connection.sendPacket("privmsg", channel, nick, `${prefix}${line}${suffix}`);
     });
-
-    let prefix = edit ? "[EDIT] ".irc.lightgrey() : "";
-    let suffix = highlight ? ` (cc: ${this.connection.loginNick})`.irc.red() : "";
-
-    this.connection.sendPacket("privmsg", channel, nick, `${prefix}${msg.msg}${suffix}`);
   }
 
   sendMessage(room, msg) {
