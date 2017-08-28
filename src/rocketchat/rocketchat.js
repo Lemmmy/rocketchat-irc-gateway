@@ -17,6 +17,12 @@ const MESSAGE_CACHE_SIZE = 50;
 
 const HIGHLIGHT_TERMS = ["@here", "@channel", "@everyone", "@all"];
 
+const ROOM_PREFIXES = {
+  d: "",
+  c: "#",
+  p: "##"
+};
+
 export default class RocketChat {
   constructor(connection, username, password) {
     this.connection = connection;
@@ -28,9 +34,11 @@ export default class RocketChat {
     this.secure = ROCKETCHAT_SECURE;
 
     this.rooms = {};
+    this.users = {};
     this.observers = {};
     this.callDates = {};
     this.userStatuses = {};
+    this.dmRooms = {};
 
     this.messageCache = [];
   }
@@ -131,6 +139,10 @@ export default class RocketChat {
 
   async updateRooms() {
     (await this.callDated("rooms/get")).forEach(room => {
+      if (room.t === "d") {
+        this.addDM(room);
+      }
+
       this.rooms[room._id] = room;
     });
   }
@@ -140,6 +152,31 @@ export default class RocketChat {
       if (room.t === "d") return;
       this.joinRoom(room);
     });
+  }
+
+  async addDM(room) {
+    let otherUserID = room._id.replace(this.me._id, "");
+    room.otherUserID = otherUserID;
+    this.dmRooms[room.otherUserID] = room._id;
+
+    try {
+      await this.trySubscribe("stream-room-messages", room._id, false);
+    } catch (ignored) {}
+  }
+
+  async addUser(user) {
+    if (!this.users[user._id]) {
+      this.users[user._id] = user;
+
+      if (user._id !== this.me._id) {
+        try {
+          let dm = (await this.call("createDirectMessage", user.username)).rid;
+          await this.addDM(this.rooms[dm]);
+        } catch (ignored) {}
+      }
+    } else {
+      _.assign(this.users[user._id], user);
+    }
   }
 
   async joinRoom(room) {
@@ -163,21 +200,33 @@ export default class RocketChat {
 
     users.forEach(user => {
       usersObj[user._id] = user;
+      this.addUser(user);
     });
 
     room.users = usersObj;
   }
 
-  getRoomFromIRCChannel(channel) {
+  async getRoomFromIRCChannel(channel) {
     let t = "c";
 
     if (channel.startsWith("##")) t = "p";
     else if (!channel.startsWith("#")) t = "d";
 
     let name = channel.replace(/^##?/, "");
-    let room = _.find(this.rooms, { name, t });
 
-    return room;
+    if (t === "d") {
+      let user = _.find(this.users, { username: name });
+
+      if (this.dmRooms[user._id]) {
+        return this.rooms[this.dmRooms[user._id]];
+      }
+
+      let dm = (await this.call("createDirectMessage", user.username)).rid;
+      this.addDM(this.rooms[dm]);
+      return this.rooms[dm];
+    }
+
+    return _.find(this.rooms, {name, t});
   }
 
   getIRCChannelName(room) {
@@ -185,7 +234,7 @@ export default class RocketChat {
   }
 
   getRoomPrefix(room) {
-    return room.t === "c" ? "#" : "##";
+    return ROOM_PREFIXES[room.t];
   }
 
   call(method, ...params) {
@@ -215,7 +264,7 @@ export default class RocketChat {
         try {
           msg.fields.args.forEach(this.onMessage.bind(this));
         } catch (e) {
-          log.error(e);
+          log.error(e.stack || e);
         }
       }
     } catch (ignored) {}
@@ -223,6 +272,16 @@ export default class RocketChat {
 
   onMessage(msg) {
     let room = this.rooms[msg.rid];
+    if (room.t === "d" && msg.u._id === this.me._id) {
+      let otherUserID = room.otherUserID;
+      let otherUser = this.users[otherUserID];
+      msg.u = otherUser;
+      msg.prefix = "[YOU] ".irc.lightgrey();
+      this.onMessage(msg);
+
+      return;
+    }
+
     let channel = this.getIRCChannelName(room);
     let nick = msg.u.username;
 
@@ -244,7 +303,7 @@ export default class RocketChat {
         if (line.includes(term)) highlight = true;
       });
 
-      let prefix = edit ? "[EDIT] ".irc.lightgrey() : "";
+      let prefix = (msg.prefix || "") + (edit ? "[EDIT] ".irc.lightgrey() : "");
       let suffix = highlight ? ` (cc: ${this.connection.loginNick})`.irc.red() : "";
 
       this.connection.sendPacket("privmsg", channel, nick, `${prefix}${line}${suffix}`);
@@ -262,6 +321,7 @@ export default class RocketChat {
     if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
 
     this.call("sendMessage", msgObj);
+    this.call("readMessages", room._id);
   }
 
   sendRoomWho(room) {

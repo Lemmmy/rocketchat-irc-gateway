@@ -1,10 +1,8 @@
-import log from "../../logger";
-
-function onPrivmsgCommand(conn, params, prefix) {
+async function onPrivmsgCommand(conn, params, prefix) {
   const rc = conn.rocketchat;
 
   let channel = params[0];
-  let room = rc.getRoomFromIRCChannel(channel);
+  let room = await rc.getRoomFromIRCChannel(channel);
 
   if (!room) {
     return conn.sendPacket("noSuchChannelError", channel);

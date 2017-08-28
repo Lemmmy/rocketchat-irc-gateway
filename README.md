@@ -44,7 +44,6 @@ A full list of possible environment options:
 
 # TODO
 
-- direct messages
 - channel joining
 - channel events (topic changes, users joining etc)
 - markdown parsing and coercion to irc formatting
