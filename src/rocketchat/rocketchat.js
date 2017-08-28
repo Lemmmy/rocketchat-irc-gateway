@@ -6,10 +6,16 @@ import DDP from "ddp";
 import login from "ddp-login";
 import promisify from "es6-promisify";
 import mdbid from "mdbid";
+import EJSON from "ejson";
+require("irc-colors").global();
 
 const ROCKETCHAT_HOST = process.env.ROCKETCHAT_HOST;
 const ROCKETCHAT_PORT = process.env.ROCKETCHAT_PORT || 443;
 const ROCKETCHAT_SECURE = process.env.ROCKETCHAT_SECURE ? process.env.ROCKETCHAT_SECURE === true : true;
+
+const MESSAGE_CACHE_SIZE = 50;
+
+const HIGHLIGHT_TERMS = ["@here", "@channel", "@everyone", "@all"];
 
 export default class RocketChat {
   constructor(connection, username, password) {
@@ -25,6 +31,8 @@ export default class RocketChat {
     this.observers = {};
     this.callDates = {};
     this.userStatuses = {};
+
+    this.messageCache = [];
   }
 
   async connect() {
@@ -36,7 +44,7 @@ export default class RocketChat {
       maintainCollections: true
     });
 
-    this.client.on("message", this.onMessage.bind(this));
+    this.client.on("message", this.onRawMessage.bind(this));
 
     await promisify(this.client.connect.bind(this.client))();
 
@@ -140,12 +148,13 @@ export default class RocketChat {
     this.connection.joinRoom(ircChannel, room.topic);
     await this.getUsersInRoom(room);
 
+    await this.trySubscribe("stream-room-messages", room._id, false);
+
     let nameList = _.map(room.users, "username");
     this.connection.sendPacket("namesReply", ircChannel, nameList.join(" "));
     this.connection.sendPacket("namesEnd", ircChannel);
 
-    _.forOwn(room.users, user => this.connection.sendPacket("whoReply", user.name, ircChannel, user.name, this.userStatuses[user._id]));
-    this.connection.sendPacket("whoEnd", ircChannel);
+    this.sendRoomWho(room);
   }
 
   async getUsersInRoom(room) {
@@ -196,15 +205,66 @@ export default class RocketChat {
     }
   }
 
-  onMessage(msg) {
+  onRawMessage(msg) {
     log.trace(msg);
+
+    try {
+      msg = EJSON.parse(msg);
+
+      if (msg.msg === "changed" && msg.collection === "stream-room-messages") {
+        try {
+          msg.fields.args.forEach(this.onMessage.bind(this));
+        } catch (e) {
+          log.error(e);
+        }
+      }
+    } catch (ignored) {}
+  }
+
+  onMessage(msg) {
+    let room = this.rooms[msg.rid];
+    let channel = this.getIRCChannelName(room);
+    let nick = msg.u.username;
+
+    let edit = false;
+    let highlight = false;
+
+    let oldMsg;
+    if (oldMsg = _.find(this.messageCache, { _id: msg._id })) {
+      if (oldMsg.msg === msg.msg) return;
+      edit = true;
+    }
+
+    this.messageCache.push(msg);
+    if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
+
+    HIGHLIGHT_TERMS.forEach(term => {
+      if (msg.msg.includes(term)) highlight = true;
+    });
+
+    let prefix = edit ? "[EDIT] ".irc.lightgrey() : "";
+    let suffix = highlight ? ` (cc: ${this.connection.loginNick})`.irc.red() : "";
+
+    this.connection.sendPacket("privmsg", channel, nick, `${prefix}${msg.msg}${suffix}`);
   }
 
   sendMessage(room, msg) {
-    this.call("sendMessage", {
+    let msgObj = {
       _id: mdbid(),
       rid: room._id,
       msg
-    });
+    };
+
+    this.messageCache.push(msgObj);
+    if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
+
+    this.call("sendMessage", msgObj);
+  }
+
+  sendRoomWho(room) {
+    let ircChannel = this.getIRCChannelName(room);
+
+    _.forOwn(room.users, user => this.connection.sendPacket("whoReply", user.name, ircChannel, user.name, this.userStatuses[user._id]));
+    this.connection.sendPacket("whoEnd", ircChannel);
   }
 }

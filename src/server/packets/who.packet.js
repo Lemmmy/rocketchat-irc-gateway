@@ -1,5 +1,3 @@
-import _ from "lodash";
-
 function onWhoCommand(conn, params, prefix) {
   const rc = conn.rocketchat;
 
@@ -10,8 +8,7 @@ function onWhoCommand(conn, params, prefix) {
     return conn.sendPacket("noSuchChannelError", channel);
   }
 
-  _.forOwn(room.users, user => conn.sendPacket("whoReply", user.name, channel, user.name, rc.userStatuses[user._id]));
-  conn.sendPacket("whoEnd", channel);
+  rc.sendRoomWho(room);
 }
 
 function whoReplyPacket(conn, nick, channel, fullName, online) {

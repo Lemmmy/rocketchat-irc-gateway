@@ -12,10 +12,24 @@ function onPrivmsgCommand(conn, params, prefix) {
 
   let msg = params[1];
 
-  log.debug(`{blue:${channel}} ${msg}`);
   rc.sendMessage(room, msg);
+}
+
+function privmsgPacket(conn, dest, nick, msg) {
+  conn.send({
+    command: "PRIVMSG",
+    prefix: {
+      nick: nick,
+      server: conn.server.host
+    },
+    parameters: [
+      dest,
+      msg
+    ]
+  });
 }
 
 module.exports = (server) => {
   server.addPacketHandler("privmsg", onPrivmsgCommand);
+  server.addPacketSender("privmsg", privmsgPacket);
 };
