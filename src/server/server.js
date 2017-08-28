@@ -1,5 +1,6 @@
 import log from "../logger";
 
+import _ from "lodash";
 import net from "net";
 import tls from "tls";
 import glob from "glob";
@@ -27,7 +28,9 @@ class Server {
     this.addPacketHandlers();
 
     this.tcpServer = net.createServer(this.onConnection.bind(this));
-    this.tcpServer.listen(this.serverPort);
+    this.tcpServer.listen(this.serverPort, () => {
+      log.info(`Started insecure server on port {blue:${this.serverPort}}`);
+    });
 
     if (this.serverSecure) {
       this.tcpSecureServer = tls.createServer({
@@ -36,7 +39,9 @@ class Server {
         ca: this.serverSelfSigned ? fs.readFileSync(this.serverCA) : ""
       }, this.onConnection.bind(this));
 
-      this.tcpSecureServer.listen(this.serverSecurePort);
+      this.tcpSecureServer.listen(this.serverSecurePort, () => {
+        log.info(`Started secure server on port {blue:${this.serverSecurePort}}`);
+      });
     }
   }
 
@@ -56,8 +61,10 @@ class Server {
     } else {
       this.packetHandlers[command].push(handler);
     }
+  }
 
-    log.info(`Added packet handler for {green:${command}}`);
+  addPacketSender(name, sender) {
+    this.packetSenders[name] = sender;
   }
 
   addPacketHandlers() {
@@ -65,12 +72,13 @@ class Server {
       files.forEach(file => {
         require(file)(this);
       });
-    });
-  }
 
-  addPacketSender(name, sender) {
-    this.packetSenders[name] = sender;
-    log.info(`Added packet sender {green:${name}}`);
+      let handlers = _.map(_.keys(this.packetHandlers), key => `{green:${key}}`);
+      let senders = _.map(_.keys(this.packetSenders), key => `{green:${key}}`);
+
+      log.info(`Added packet handlers: ${handlers.join(", ")}`);
+      log.info(`Added packet senders: ${senders.join(", ")}`);
+    });
   }
 }
 

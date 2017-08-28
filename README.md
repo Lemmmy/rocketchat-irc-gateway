@@ -29,7 +29,6 @@ Connect to `irc.demo.rocket.chat:6667` with the nick set to your rocketchat user
 - channel joining
 - channel events (topic changes, users joining etc)
 - markdown parsing and coercion to irc formatting
-- SSL
 - file upload links
 - file upload via DCC
 - settings via password (e.g. appending `.noformat` to password)
