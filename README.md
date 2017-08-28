@@ -54,3 +54,4 @@ A full list of possible environment options:
 - message searches
 - user searches
 - room listing + searching
+- upload code blocks as snippets to a webserver
