@@ -17,6 +17,7 @@ class Server {
     this.serverKey = process.env.SERVER_KEY || "server-key.pem";
     this.serverCert = process.env.SERVER_CERT || "server-cert.pem";
     this.serverCA = process.env.SERVER_CERT || "ca-cert.pem";
+    this.serverSelfSigned = process.env.SERVER_SELF_SIGNED === "true" || false;
     this.connections = [];
     this.packetHandlers = {};
     this.packetSenders = {};
@@ -32,7 +33,7 @@ class Server {
       this.tcpSecureServer = tls.createServer({
         key: fs.readFileSync(this.serverKey),
         cert: fs.readFileSync(this.serverCert),
-        ca: fs.readFileSync(this.serverCA)
+        ca: this.serverSelfSigned ? fs.readFileSync(this.serverCA) : ""
       }, this.onConnection.bind(this));
 
       this.tcpSecureServer.listen(this.serverSecurePort);
