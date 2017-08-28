@@ -54,3 +54,5 @@ A full list of possible environment options:
 - user searches
 - room listing + searching
 - upload code blocks as snippets to a webserver
+- editing messages from IRC client
+- deleting messages from IRC client
