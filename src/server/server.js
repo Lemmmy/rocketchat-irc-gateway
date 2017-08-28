@@ -1,15 +1,22 @@
 import log from "../logger";
 
 import net from "net";
+import tls from "tls";
 import glob from "glob";
 import path from "path";
+import fs from "fs";
 import Connection from "./connection";
 
 class Server {
   constructor() {
     this.rocketchatHost = process.env.ROCKETCHAT_HOST;
     this.serverHost = process.env.SERVER_HOST || `irc.${this.rocketchatHost}`;
-    this.serverPort = process.env.SERVER_PORT || 6667;
+    this.serverPort = parseInt(process.env.SERVER_PORT) || 6667;
+    this.serverSecurePort = parseInt(process.env.SERVER_SECURE_PORT) || 6697;
+    this.serverSecure = process.env.SERVER_SECURE === "true" || false;
+    this.serverKey = process.env.SERVER_KEY || "server-key.pem";
+    this.serverCert = process.env.SERVER_CERT || "server-cert.pem";
+    this.serverCA = process.env.SERVER_CERT || "ca-cert.pem";
     this.connections = [];
     this.packetHandlers = {};
     this.packetSenders = {};
@@ -20,9 +27,21 @@ class Server {
 
     this.tcpServer = net.createServer(this.onConnection.bind(this));
     this.tcpServer.listen(this.serverPort);
+
+    if (this.serverSecure) {
+      this.tcpSecureServer = tls.createServer({
+        key: fs.readFileSync(this.serverKey),
+        cert: fs.readFileSync(this.serverCert),
+        ca: fs.readFileSync(this.serverCA)
+      }, this.onConnection.bind(this));
+
+      this.tcpSecureServer.listen(this.serverSecurePort);
+    }
   }
 
   onConnection(socket) {
+    socket.setEncoding("utf8");
+
     let connection = new Connection(this, socket);
     this.connections.push(connection);
     connection.start();
