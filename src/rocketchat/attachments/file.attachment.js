@@ -1,3 +1,5 @@
+require("irc-colors").global();
+
 let webserverURL;
 
 function fileAttachmentHandler(rc, msg, attachment) {
