@@ -1,11 +1,5 @@
 function killPacket(conn, nick, msg) {
-  conn.send({
-    command: "KILL",
-    parameters: [
-      nick,
-      msg
-    ]
-  });
+  conn.sendCommand("KILL", nick, msg);
 }
 
 module.exports = (server) => {

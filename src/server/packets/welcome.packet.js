@@ -1,14 +1,5 @@
 function welcomePacket(conn, message) {
-  conn.send({
-    command: "001",
-    prefix: {
-      server: conn.server.serverHost
-    },
-    parameters: [
-      conn.loginNick,
-      message
-    ]
-  });
+  conn.sendCommandServer("001", conn.loginNick, message); // RPL_WELCOME
 }
 
 module.exports = (server) => {

@@ -5,15 +5,7 @@ function onPassCommand(conn, params, prefix) {
 }
 
 function passMismatchErrorPacket(conn, msg) {
-  conn.send({
-    command: "464", // ERR_PASSWDMISMATCH
-    prefix: {
-      server: conn.server.serverHost
-    },
-    parameters: [
-      msg
-    ]
-  });
+  conn.sendCommandServer("464", msg); // ERR_PASSWDMISMATCH
 }
 
 module.exports = (server) => {

@@ -1,22 +1,9 @@
 function pingPacket(conn, msg) {
-  conn.send({
-    command: "PING",
-    parameters: [
-      `:${msg}`
-    ]
-  })
+  conn.sendCommand("PING", `:${msg}`);
 }
 
 function pongPacket(conn, msg) {
-  conn.send({
-    command: "PONG",
-    prefix: {
-      server: conn.server.serverHost
-    },
-    parameters: [
-      `:${msg}`
-    ]
-  })
+  conn.sendCommandServer("PONG", `:${msg}`);
 }
 
 function onPingCommand(conn, params, prefix) {

@@ -1,16 +1,9 @@
 function topicPacket(conn, nick, channel, topic) {
-  conn.send({
-    command: "TOPIC",
-    prefix: {
-      nick,
-      user: nick,
-      host: conn.server.serverHost
-    },
-    parameters: [
-      channel,
-      topic
-    ]
-  });
+  conn.sendCommandPrefix("TOPIC", {
+    nick,
+    user: nick,
+    host: conn.server.serverHost
+  }, channel, topic);
 }
 
 module.exports = (server) => {

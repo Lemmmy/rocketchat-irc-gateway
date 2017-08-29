@@ -3,17 +3,11 @@ import log from "../../logger";
 import util from "util";
 
 function partPacket(conn, nick, channel) {
-  conn.send({
-    command: "PART",
-    prefix: {
-      nick,
-      user: nick,
-      host: conn.server.serverHost
-    },
-    parameters: [
-      channel
-    ]
-  });
+  conn.sendCommandPrefix("PART", {
+    nick,
+    user: nick,
+    host: conn.server.serverHost
+  }, channel);
 }
 
 async function onPartCommand(conn, params, prefix) {

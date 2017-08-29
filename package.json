@@ -27,6 +27,7 @@
     "redis": "^2.8.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
+    "saslmechanisms": "git+https://github.com/jaredhanson/js-sasl.git",
     "tfunk": "^3.1.0",
     "uuid": "^3.1.0"
   },

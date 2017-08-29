@@ -11,6 +11,8 @@ import RocketChat from "../rocketchat/rocketchat";
 const PING_RATE = 20000;
 const TIMEOUT_DELAY = 240000;
 
+export const CAPABILITIES = ["sasl"];
+
 export default class Connection {
   constructor(server, socket) {
     this.state = "connecting";
@@ -30,6 +32,8 @@ export default class Connection {
 
     this.socket.on("close", this.onClose.bind(this));
     this.lastPong = new Date().getTime();
+
+    this.activeCapabilities = [];
 
     setTimeout(this.ping.bind(this), PING_RATE);
   }
@@ -69,6 +73,31 @@ export default class Connection {
   sendPacket(name, ...args) {
     if (!this.server.packetSenders[name]) return;
     this.server.packetSenders[name](this, ...args);
+  }
+
+  sendCommand(command, ...parameters) {
+    this.send({
+      command,
+      parameters: [...parameters]
+    });
+  }
+
+  sendCommandServer(command, ...parameters) {
+    this.send({
+      command,
+      prefix: {
+        server: this.server.serverHost
+      },
+      parameters: [...parameters]
+    });
+  }
+
+  sendCommandPrefix(command, prefix, ...parameters) {
+    this.send({
+      command,
+      prefix,
+      parameters: [...parameters]
+    });
   }
 
   checkLogin() {

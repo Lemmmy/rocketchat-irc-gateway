@@ -7,32 +7,11 @@ function onNameCommand(conn, params, prefix) {
 }
 
 function namesReplyPacket(conn, channel, users) {
-  conn.send({
-    command: "353", // RPL_NAMREPLY
-    prefix: {
-      server: conn.server.serverHost
-    },
-    parameters: [
-      conn.loginNick,
-      "=", // @ secret, * private, = public
-      channel,
-      users
-    ]
-  });
+  conn.sendCommandServer("353", conn.loginNick, "=", channel, users); // RPL_NAMREPLY
 }
 
 function namesEndPacket(conn, channel) {
-  conn.send({
-    command: "366", // RPL_ENDOFNAMES
-    prefix: {
-      server: conn.server.serverHost
-    },
-    parameters: [
-      conn.loginNick,
-      channel,
-      "End of /NAMES list"
-    ]
-  });
+  conn.sendCommandServer("366", conn.loginNick, channel, "End of /NAMES list"); // RPL_ENDOFNAMES
 }
 
 module.exports = (server) => {

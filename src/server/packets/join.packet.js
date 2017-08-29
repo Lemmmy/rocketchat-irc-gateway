@@ -3,17 +3,11 @@ import log from "../../logger";
 import util from "util";
 
 function joinPacket(conn, nick, channel) {
-  conn.send({
-    command: "JOIN",
-    prefix: {
-      nick,
-      user: nick,
-      host: conn.server.serverHost
-    },
-    parameters: [
-      channel
-    ]
-  });
+  conn.sendCommandPrefix("JOIN", {
+    nick,
+    user: nick,
+    host: conn.server.serverHost
+  }, channel);
 }
 
 async function onJoinCommand(conn, params, prefix) {

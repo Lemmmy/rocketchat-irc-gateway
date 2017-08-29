@@ -14,17 +14,10 @@ async function onPrivmsgCommand(conn, params, prefix) {
 }
 
 function privmsgPacket(conn, dest, nick, msg) {
-  conn.send({
-    command: "PRIVMSG",
-    prefix: {
-      nick: nick,
-      server: conn.server.host
-    },
-    parameters: [
-      dest,
-      msg
-    ]
-  });
+  conn.sendCommandPrefix("PRIVMSG", {
+    nick,
+    server: conn.server.serverHost
+  }, dest, msg);
 }
 
 module.exports = (server) => {

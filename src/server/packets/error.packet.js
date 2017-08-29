@@ -1,20 +1,9 @@
 function errorPacket(conn, msg) {
-  conn.send({
-    command: "ERROR",
-    parameters: [
-      msg
-    ]
-  });
+  conn.sendCommand("ERROR", msg);
 }
 
 function noSuchChannelError(conn, channel, msg) {
-  conn.send({
-    command: "403", // ERR_NOSUCHCHANNEL
-    parameters: [
-      channel,
-      msg
-    ]
-  });
+  conn.sendCommand("403", msg); // ERR_NOSUCHCHANNEL
 }
 
 module.exports = (server) => {

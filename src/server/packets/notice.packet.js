@@ -1,14 +1,5 @@
 function noticePacket(conn, channel, msg) {
-  conn.send({
-    command: "NOTICE",
-    prefix: {
-      host: conn.server.serverHost
-    },
-    parameters: [
-      channel,
-      msg
-    ]
-  });
+  conn.sendCommandServer("NOTICE", channel, msg);
 }
 
 module.exports = (server) => {
