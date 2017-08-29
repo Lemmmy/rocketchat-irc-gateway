@@ -31,7 +31,7 @@ function fileRoute(req, res, next) {
     return res.status(403).send("You are not authorised to view this resource.");
   }
 
-  requestProxy(_.assign(proxyOptions, {
+  requestProxy(_.assign({}, proxyOptions, {
     headers: {
       "Cookie": `rc_uid=${conn.rocketchat.me._id}; rc_token=${conn.rocketchat.token}`
     }

@@ -86,8 +86,8 @@ class Server {
     let handlers = _.map(_.keys(this.packetHandlers), key => `{green:${key}}`);
     let senders = _.map(_.keys(this.packetSenders), key => `{green:${key}}`);
 
-    log.info(`Added packet handlers: ${handlers.join(", ")}`);
-    log.info(`Added packet senders: ${senders.join(", ")}`);
+    log.debug(`Added packet handlers: ${handlers.join(", ")}`);
+    log.debug(`Added packet senders: ${senders.join(", ")}`);
   }
 }
 
