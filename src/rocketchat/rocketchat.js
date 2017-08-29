@@ -115,6 +115,7 @@ export default class RocketChat {
   }
 
   onSocketError(error) {
+    log.error("Socket error");
     log.error(util.inspect(error, {
       colors: true,
       depth: null

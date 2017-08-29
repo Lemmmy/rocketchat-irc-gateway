@@ -95,6 +95,11 @@ export default class Connection {
     try {
       await this.rocketchat.connect();
     } catch (err) {
+      if (err.error && err.error === 403) {
+        this.sendPacket("error", "Error: incorrect login");
+        return this.disconnect();
+      }
+
       log.error("Connection error");
       log.error(err.stack || util.inspect(err));
 

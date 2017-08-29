@@ -22,6 +22,13 @@ async function onJoinCommand(conn, params, prefix) {
   try {
     await conn.rocketchat.joinRoom(channel);
   } catch (e) {
+    if (e.error) {
+      switch (e.error) {
+        case 500:
+          return conn.sendPacket("noSuchChannelError");
+      }
+    }
+
     log.error(e.stack || util.inspect(e, {
       colors: true,
       depth: null
