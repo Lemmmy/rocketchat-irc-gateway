@@ -21,8 +21,11 @@ class Server {
     this.serverCert = process.env.SERVER_CERT || "server-cert.pem";
     this.serverCA = process.env.SERVER_CERT || "ca-cert.pem";
     this.serverSelfSigned = process.env.SERVER_SELF_SIGNED === "true" || false;
-    this.webserverURL = process.env.WEBSERVER_URL || "http://localhost:3001";
     this.webserverPort = parseInt(process.env.WEBSERVER_PORT) || 3001;
+    this.webserverURL = process.env.WEBSERVER_URL ||
+      `${this.webserverPort === 443 ? "https://" : "http://"}` +
+      this.serverHost +
+      `${this.webserverPort !== 80 || this.webserverPort !== 443 ? `:${this.webserverPort}` : ""}`;
     this.connections = [];
     this.packetHandlers = {};
     this.packetSenders = {};
