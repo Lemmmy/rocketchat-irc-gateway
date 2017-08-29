@@ -194,16 +194,21 @@ export default class RocketChat {
   }
 
   async clientJoinRoom(room) {
-    let ircChannel = this.getIRCChannelName(room);
+    let channel = this.getIRCChannelName(room);
 
-    this.connection.joinRoom(ircChannel, room.topic);
+    this.connection.joinRoom(channel, room.topic);
+
+    if (room.announcement) {
+      this.connection.sendPacket("notice", channel, `${"Channel announcement".irc.bold()}: ${room.announcement.irc.red()}`);
+    }
+
     await this.getUsersInRoom(room);
 
     await this.trySubscribe("stream-room-messages", room._id, false);
 
     let nameList = _.map(room.users, "username");
-    this.connection.sendPacket("namesReply", ircChannel, nameList.join(" "));
-    this.connection.sendPacket("namesEnd", ircChannel);
+    this.connection.sendPacket("namesReply", channel, nameList.join(" "));
+    this.connection.sendPacket("namesEnd", channel);
 
     this.sendRoomWho(room);
   }
