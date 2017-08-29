@@ -2,7 +2,7 @@ let webserverURL;
 
 function fileAttachmentHandler(rc, msg) {
   let id = msg.file._id;
-  let name = msg.file.name;
+  let name = encodeURIComponent(msg.file.name);
 
   let token = rc.connection.webserverToken;
 
