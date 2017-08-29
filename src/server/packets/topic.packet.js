@@ -1,7 +1,9 @@
-function topicPacket(conn, channel, topic) {
+function topicPacket(conn, nick, channel, topic) {
   conn.send({
     command: "TOPIC",
     prefix: {
+      nick,
+      user: nick,
       host: conn.server.serverHost
     },
     parameters: [

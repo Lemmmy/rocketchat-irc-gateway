@@ -110,7 +110,7 @@ export default class Connection {
     this.sendPacket("join", this.loginNick, room);
 
     if (topic) {
-      this.sendPacket("topic", room, topic);
+      this.sendPacket("topic", "", room, topic);
     }
   }
 
