@@ -1,18 +1,23 @@
 let webserverURL;
 
-function fileAttachmentHandler(rc, msg) {
+function fileAttachmentHandler(rc, msg, attachmennt) {
   let id = msg.file._id;
   let name = encodeURIComponent(msg.file.name);
-  let description = msg.file.description;
+  let title = attachment.title;
+  let description = attachment.description;
 
   let token = rc.connection.webserverToken;
 
   let url = `${webserverURL}/file/${id}/${name}?t=${token}`;
 
+  if (title) {
+    msg.msg += "\n" + title.irc.bold().underline();
+  }
+
   msg.msg += "\n" + url;
 
   if (description) {
-    msg.msg += "\n" + description;
+    msg.msg += "\n" + description.irc.italic();
   }
 }
 
