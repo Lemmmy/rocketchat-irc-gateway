@@ -38,7 +38,8 @@ function whoEndPacket(conn, channel) {
       server: conn.server.serverHost
     },
     parameters: [
-      channel
+      channel,
+      "End of WHO list"
     ]
   });
 }
