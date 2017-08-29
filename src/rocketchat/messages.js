@@ -1,5 +1,7 @@
 import _ from "lodash";
 
+import * as RocketChat from "./rocketchat";
+
 import log from "../logger";
 
 import mdbid from "mdbid";
@@ -56,7 +58,7 @@ module.exports = {
     };
 
     this.messageCache.push(msgObj);
-    if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
+    if (this.messageCache.length > RocketChat.MESSAGE_CACHE_SIZE) this.messageCache.shift();
 
     this.call("sendMessage", msgObj);
     this.call("readMessages", room._id);

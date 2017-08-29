@@ -20,8 +20,7 @@ export const MESSAGE_CACHE_SIZE = 50;
 
 export const HIGHLIGHT_TERMS = ["@here", "@channel", "@everyone", "@all"];
 
-const modules = ["./users.js", "./rooms.js", "./dms.js", "./channels.js", "./messages.js", "./subscriptions.js",
-  "./observers.js", "./methods.js"];
+const modules = ["./users", "./rooms", "./dms", "./channels", "./messages", "./subscriptions", "./observers", "./methods"];
 
 export default class RocketChat {
   constructor(connection, username, password) {
