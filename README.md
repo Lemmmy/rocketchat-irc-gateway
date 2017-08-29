@@ -29,7 +29,6 @@ A full list of possible environment options:
 
 | Environment Variable | Default                                | Description                                                                                      |
 |----------------------|----------------------------------------|--------------------------------------------------------------------------------------------------|
-|                      |                                        |                                                                                                  |
 | LOG_LEVEL            | warn                                   | Maximum log level to be printed to the console. Possible values: trace, debug, warn, info, error |
 | ROCKETCHAT_HOST      |                                        | **(required)** Hostname of the rocketchat server to connect to                                   |
 | ROCKETCHAT_PORT      | 443                                    | Port of the rocketchat server to connect to                                                      |
