@@ -50,7 +50,6 @@ A full list of possible environment options:
 
 # TODO
 
-- channel events (topic changes, users joining etc)
 - markdown parsing and coercion to irc formatting
 - file upload via DCC
 - settings via password (e.g. appending `.noformat` to password)
