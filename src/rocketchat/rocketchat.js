@@ -161,7 +161,7 @@ export default class RocketChat {
   async joinDefaultRooms() {
     _.forOwn(this.rooms, room => {
       if (room.t === "d") return;
-      this.joinRoom(room);
+      this.clientJoinRoom(room);
     });
   }
 
@@ -190,7 +190,7 @@ export default class RocketChat {
     }
   }
 
-  async joinRoom(room) {
+  async clientJoinRoom(room) {
     let ircChannel = this.getIRCChannelName(room);
 
     this.connection.joinRoom(ircChannel, room.topic);
@@ -203,6 +203,38 @@ export default class RocketChat {
     this.connection.sendPacket("namesEnd", ircChannel);
 
     this.sendRoomWho(room);
+  }
+
+  async joinRoom(name) {
+    await this.call("slashCommand", {
+      cmd: "join",
+      params: name
+    });
+
+    await this.updateRooms();
+
+    let room = await this.getRoomFromIRCChannel(name);
+    if (!room) {
+      throw Error("no room");
+    }
+
+    await this.clientJoinRoom(room);
+  }
+
+  async leaveRoom(name) {
+    let room = await this.getRoomFromIRCChannel(name);
+
+    await this.call("slashCommand", {
+      cmd: "leave",
+      params: "",
+      msg: {
+        _id: mdbid(),
+        rid: room._id,
+        msg: "/leave "
+      }
+    });
+
+    this.connection.sendPacket("part", this.connection.loginNick, name);
   }
 
   async getUsersInRoom(room) {

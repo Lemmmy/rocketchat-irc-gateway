@@ -2,9 +2,9 @@ import log from "../../logger";
 
 import util from "util";
 
-function joinPacket(conn, nick, channel) {
+function partPacket(conn, nick, channel) {
   conn.send({
-    command: "JOIN",
+    command: "PART",
     prefix: {
       nick,
       user: nick,
@@ -16,11 +16,11 @@ function joinPacket(conn, nick, channel) {
   });
 }
 
-async function onJoinCommand(conn, params, prefix) {
+async function onPartCommand(conn, params, prefix) {
   let channel = params[0];
 
   try {
-    await conn.rocketchat.joinRoom(channel);
+    await conn.rocketchat.leaveRoom(channel);
   } catch (e) {
     log.error(e.stack || util.inspect(e, {
       colors: true,
@@ -30,6 +30,6 @@ async function onJoinCommand(conn, params, prefix) {
 }
 
 module.exports = (server) => {
-  server.addPacketSender("join", joinPacket);
-  server.addPacketHandler("join", onJoinCommand);
+  server.addPacketSender("part", partPacket);
+  server.addPacketHandler("part", onPartCommand);
 };
