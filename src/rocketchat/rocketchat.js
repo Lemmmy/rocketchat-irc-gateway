@@ -5,6 +5,7 @@ import DDP from "ddp";
 import login from "ddp-login";
 import promisify from "es6-promisify";
 import EJSON from "ejson";
+import util from "util";
 require("irc-colors").global();
 
 export const ROCKETCHAT_HOST = process.env.ROCKETCHAT_HOST;
@@ -57,10 +58,14 @@ export default class RocketChat {
     this.client = new DDP({
       host: this.host,
       port: this.port,
-      maintainCollections: true
+      maintainCollections: true,
+      autoReconnect: true,
+      autoReconnectTimer: 15
     });
 
     this.client.on("message", this.onData.bind(this));
+    this.client.on("socket-close", this.onSocketClose.bind(this));
+    this.client.on("socket-error", this.onSocketError.bind(this));
 
     await promisify(this.client.connect.bind(this.client))();
 
@@ -100,5 +105,21 @@ export default class RocketChat {
         }
       }
     } catch (ignored) {}
+  }
+
+  onSocketClose(code, msg) {
+    this.connection.sendPacket("notice", "*", "Disconnected from rocketchat".irc.red());
+    this.connection.sendPacket("notice", "*", `[${code.toString().irc.red()}] ${msg}`);
+
+    this.connection.disconnect();
+  }
+
+  onSocketError(error) {
+    log.error(util.inspect(error, {
+      colors: true,
+      depth: null
+    }));
+
+    this.connection.sendPacket("notice", "*", "Error in rocketchat socket".irc.red());
   }
 }
