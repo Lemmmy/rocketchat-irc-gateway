@@ -3,6 +3,9 @@ function userLeftMessage(msg) {
   let channel = this.getIRCChannelName(room);
   let user = msg.u.username;
 
+  this.addUser(msg.u);
+  this.getUsersInRoom(room);
+
   this.connection.sendPacket("part", user, channel);
 }
 
