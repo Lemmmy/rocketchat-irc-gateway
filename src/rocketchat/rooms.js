@@ -41,6 +41,15 @@ module.exports = {
   },
 
   async joinRoom(name) {
+    let room = await this.getRoomFromIRCChannel(name);
+
+    if (room) {
+      await this.updateRooms();
+      await this.clientJoinRoom(room);
+
+      return;
+    }
+
     await this.call("slashCommand", {
       cmd: "join",
       params: name
@@ -48,7 +57,8 @@ module.exports = {
 
     await this.updateRooms();
 
-    let room = await this.getRoomFromIRCChannel(name);
+    room = await this.getRoomFromIRCChannel(name);
+
     if (!room) {
       throw Error("no room");
     }
