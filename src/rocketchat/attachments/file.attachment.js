@@ -1,6 +1,6 @@
 let webserverURL;
 
-function fileAttachmentHandler(rc, msg, attachmennt) {
+function fileAttachmentHandler(rc, msg, attachment) {
   let id = msg.file._id;
   let name = encodeURIComponent(msg.file.name);
   let title = attachment.title;
