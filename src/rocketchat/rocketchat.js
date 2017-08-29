@@ -7,11 +7,18 @@ import login from "ddp-login";
 import promisify from "es6-promisify";
 import mdbid from "mdbid";
 import EJSON from "ejson";
+import glob from "glob";
+import path from "path";
 require("irc-colors").global();
 
-const ROCKETCHAT_HOST = process.env.ROCKETCHAT_HOST;
-const ROCKETCHAT_PORT = process.env.ROCKETCHAT_PORT || 443;
-const ROCKETCHAT_SECURE = process.env.ROCKETCHAT_SECURE ? process.env.ROCKETCHAT_SECURE === true : true;
+export const ROCKETCHAT_HOST = process.env.ROCKETCHAT_HOST;
+export const ROCKETCHAT_PORT = process.env.ROCKETCHAT_PORT || 443;
+export const ROCKETCHAT_SECURE = process.env.ROCKETCHAT_SECURE ? process.env.ROCKETCHAT_SECURE === true : true;
+
+export const ROCKETCHAT_PUBLIC_URL =
+  (ROCKETCHAT_SECURE ? "https://" : "http://") +
+  ROCKETCHAT_HOST +
+  (ROCKETCHAT_PORT !== 80 || ROCKETCHAT_PORT !== 443 ? `:${ROCKETCHAT_PORT}` : "");
 
 const MESSAGE_CACHE_SIZE = 50;
 
@@ -26,6 +33,7 @@ const ROOM_PREFIXES = {
 export default class RocketChat {
   constructor(connection, username, password) {
     this.connection = connection;
+    this.server = connection.server;
 
     this.host = ROCKETCHAT_HOST;
     this.port = ROCKETCHAT_PORT;
@@ -41,6 +49,9 @@ export default class RocketChat {
     this.dmRooms = {};
 
     this.messageCache = [];
+
+    this.attachmentHandlers = [];
+    this.addAttachmentHandlers();
   }
 
   async connect() {
@@ -270,6 +281,25 @@ export default class RocketChat {
     } catch (ignored) {}
   }
 
+  async addAttachmentHandlers() {
+    let files = await (promisify(glob)(path.join(__dirname, "/attachments/**/*.attachment.js")));
+
+    files.forEach(file => {
+      require(file)(this);
+    });
+
+    let handlers = _.map(_.keys(this.attachmentHandlers), key => `{green:${key}}`);
+    log.info(`Added attachment handlers: ${handlers.join(", ")}`);
+  }
+
+  addAttachmentHandler(type, handler) {
+    if (!this.attachmentHandlers[type]) {
+      this.attachmentHandlers[type] = [ handler ];
+    } else {
+      this.attachmentHandlers[type].push(handler);
+    }
+  }
+
   onMessage(msg) {
     let room = this.rooms[msg.rid];
     let channel = this.getIRCChannelName(room) || this.connection.loginNick;
@@ -301,6 +331,14 @@ export default class RocketChat {
     this.messageCache.push(msg);
     if (this.messageCache.length > MESSAGE_CACHE_SIZE) this.messageCache.shift();
 
+    if (msg.attachments) {
+      msg.attachments.forEach(attachment => {
+        if (this.attachmentHandlers[attachment.type]) {
+          this.attachmentHandlers[attachment.type].forEach(h => h(this, msg, attachment));
+        }
+      });
+    }
+
     msg.msg.split("\n").forEach(line => {
       let highlight = false;
 
@@ -311,7 +349,11 @@ export default class RocketChat {
       let prefix = (msg.prefix || "") + (edit ? "[EDIT] ".irc.lightgrey() : "");
       let suffix = highlight ? ` (cc: ${this.connection.loginNick})`.irc.red() : "";
 
-      this.connection.sendPacket("privmsg", channel, nick, `${prefix}${line}${suffix}`);
+      let fullMsg = `${prefix}${line}${suffix}`;
+
+      if (fullMsg.trim() === "") return;
+
+      this.connection.sendPacket("privmsg", channel, nick, fullMsg);
     });
   }
 

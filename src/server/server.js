@@ -6,7 +6,9 @@ import tls from "tls";
 import glob from "glob";
 import path from "path";
 import fs from "fs";
+import promisify from "es6-promisify";
 import Connection from "./connection";
+import Webserver from "./webserver";
 
 class Server {
   constructor() {
@@ -19,13 +21,15 @@ class Server {
     this.serverCert = process.env.SERVER_CERT || "server-cert.pem";
     this.serverCA = process.env.SERVER_CERT || "ca-cert.pem";
     this.serverSelfSigned = process.env.SERVER_SELF_SIGNED === "true" || false;
+    this.webserverURL = process.env.WEBSERVER_URL || "http://localhost:3001";
+    this.webserverPort = parseInt(process.env.WEBSERVER_PORT) || 3001;
     this.connections = [];
     this.packetHandlers = {};
     this.packetSenders = {};
   }
 
-  start() {
-    this.addPacketHandlers();
+  async start() {
+    await this.addPacketHandlers();
 
     this.tcpServer = net.createServer(this.onConnection.bind(this));
     this.tcpServer.listen(this.serverPort, () => {
@@ -43,6 +47,8 @@ class Server {
         log.info(`Started secure server on port {blue:${this.serverSecurePort}}`);
       });
     }
+
+    this.webserver = new Webserver(this);
   }
 
   onConnection(socket) {
@@ -67,18 +73,18 @@ class Server {
     this.packetSenders[name] = sender;
   }
 
-  addPacketHandlers() {
-    glob(path.join(__dirname, "/packets/**/*.packet.js"), (err, files) => {
-      files.forEach(file => {
-        require(file)(this);
-      });
+  async addPacketHandlers() {
+    let files = await (promisify(glob)(path.join(__dirname, "/packets/**/*.packet.js")));
 
-      let handlers = _.map(_.keys(this.packetHandlers), key => `{green:${key}}`);
-      let senders = _.map(_.keys(this.packetSenders), key => `{green:${key}}`);
-
-      log.info(`Added packet handlers: ${handlers.join(", ")}`);
-      log.info(`Added packet senders: ${senders.join(", ")}`);
+    files.forEach(file => {
+      require(file)(this);
     });
+
+    let handlers = _.map(_.keys(this.packetHandlers), key => `{green:${key}}`);
+    let senders = _.map(_.keys(this.packetSenders), key => `{green:${key}}`);
+
+    log.info(`Added packet handlers: ${handlers.join(", ")}`);
+    log.info(`Added packet senders: ${senders.join(", ")}`);
   }
 }
 

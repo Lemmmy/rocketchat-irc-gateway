@@ -4,6 +4,7 @@ import _ from "lodash";
 import util from "util";
 import {PassThrough} from "stream";
 import {Composer, Parser} from "erk";
+import randToken from "rand-token";
 
 import RocketChat from "../rocketchat/rocketchat";
 
@@ -20,6 +21,7 @@ export default class Connection {
     this.parserOutput = new PassThrough({ objectMode: true });
     this.parser = new Parser();
     this.composer = new Composer();
+    this.webserverToken = randToken.generate(16);
 
     log.info(`Incoming connection ${this.connectionName}`);
 
