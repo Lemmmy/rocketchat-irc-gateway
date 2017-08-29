@@ -13,13 +13,13 @@ function fileAttachmentHandler(rc, msg, attachment) {
   let url = `${webserverURL}/file/${id}/${name}?t=${token}`;
 
   if (title) {
-    msg.msg += "\n" + title.irc.bold.underline();
+    msg.msg += "\n" + title.irc.bold();
   }
 
   msg.msg += "\n" + url;
 
   if (description) {
-    msg.msg += "\n" + description.irc.italic();
+    msg.msg += "\n" + description;
   }
 }
 
