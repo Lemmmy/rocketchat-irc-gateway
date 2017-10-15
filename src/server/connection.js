@@ -160,7 +160,7 @@ export default class Connection {
 
     if (this.rocketchat) {
       try {
-        await this.rocketchat.call("ping");
+        await this.rocketchat.call("pong");
       } catch (err) {
         log.error("Error rocketchat ping");
         log.error(err.stack || util.inspect(err));
