@@ -110,7 +110,7 @@ export default class Connection {
   }
 
   async onRegistered() {
-    this.sendPacket("welcome", `Welcome to rocket.chat IRC gateway for ${this.server.rocketchatHost}`);
+    this.sendPacket("welcome", `Welcome to rocket.chat IRC gateway`);
 
     this.rocketchat = new RocketChat(this, this.loginNick, this.loginPass);
 
@@ -148,7 +148,7 @@ export default class Connection {
     }
   }
 
-  ping() {
+  async ping() {
     let now = new Date().getTime();
 
     if (this.lastPong + TIMEOUT_DELAY < now) {
@@ -157,6 +157,18 @@ export default class Connection {
     }
 
     this.sendPacket("ping", now);
+
+    if (this.rocketchat) {
+      try {
+        await this.rocketchat.call("ping");
+      } catch (e) {
+        log.error("Error rocketchat ping");
+        log.error(err.stack || util.inspect(err));
+        this.sendPacket("error", "Error: Failed to ping rocket.chat");
+        this.sendPacket("kill", this.loginNick, "Error: Failed to ping rocket.chat");
+        this.disconnect();
+      }
+    }
 
     setTimeout(this.ping.bind(this), PING_RATE);
   }

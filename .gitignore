@@ -5,3 +5,4 @@ dist/
 *.pem
 *.pfx
 *.srl
+pm2.json

@@ -60,7 +60,7 @@ export default class RocketChat {
       port: this.port,
       maintainCollections: true,
       autoReconnect: true,
-      autoReconnectTimer: 15
+      autoReconnectTimer: 2
     });
 
     this.client.on("message", this.onData.bind(this));
