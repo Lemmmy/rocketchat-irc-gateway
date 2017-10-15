@@ -93,6 +93,8 @@ export default class Connection {
   }
 
   sendCommandPrefix(command, prefix, ...parameters) {
+    console.log(util.inspect(prefix));
+
     this.send({
       command,
       prefix,
