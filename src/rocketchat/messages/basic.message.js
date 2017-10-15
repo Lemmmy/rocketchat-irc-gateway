@@ -55,6 +55,8 @@ function basicMessage(msg) {
 
     if (fullMsg.trim() === "") return;
 
+    console.log(nick);
+
     this.connection.sendPacket("privmsg", channel, nick, fullMsg);
   });
 }
