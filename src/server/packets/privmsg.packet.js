@@ -14,11 +14,8 @@ async function onPrivmsgCommand(conn, params, prefix) {
 }
 
 function privmsgPacket(conn, dest, nick, msg) {
-  console.log("Hi " + dest +" and " + nick);
-
   conn.sendCommandPrefix("PRIVMSG", {
     nick,
-    user: nick,
     server: conn.server.serverHost
   }, dest, msg);
 }
